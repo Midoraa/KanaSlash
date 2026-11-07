@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KANA SLASH (侍タイピング) - ZType Samurai Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+JP:wght@500;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- TOP HUD -->
+      <div id="hud" class="hud hidden">
+        <div class="hud-left">
+          <div class="stat-box">
+            <span class="stat-label">ĐIỂM SỐ / SCORE</span>
+            <span id="hud-score" class="stat-value">000000</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">WAVE</span>
+            <span id="hud-wave" class="stat-value">1</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">CHẾ ĐỘ / MODE</span>
+            <span id="hud-mode" class="stat-value mode-badge">HIRAGANA</span>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div class="fury-container">
+            <div class="fury-header">
+              <span class="fury-title">剣意 KIẾM Ý (IAIJUTSU)</span>
+              <span id="hud-fury-text" class="fury-pct">0%</span>
+            </div>
+            <div class="fury-bar-bg">
+              <div id="hud-fury-fill" class="fury-bar-fill"></div>
+            </div>
+            <div id="hud-fury-prompt" class="fury-prompt hidden">
+              NHẤN <kbd>SPACE</kbd> ĐỂ THI TRIỂN <strong>「斬 - NHẤT ĐAO LƯỠNG ĐOẠN」</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="stat-box combo-box">
+            <span class="stat-label">COMBO</span>
+            <span id="hud-combo" class="stat-value combo-val">x1.0</span>
+            <span id="hud-streak" class="sub-stat">0 Chuỗi</span>
+          </div>
+          <div class="stat-box hp-box">
+            <span class="stat-label">SINH MỆNH / HP</span>
+            <div id="hud-hearts" class="hearts-row"></div>
+          </div>
+          <button id="btn-menu-return" class="hud-btn" title="Về Menu (ESC khi không khóa mục tiêu)">☰ MENU</button>
+        </div>
+      </div>
+
+      <!-- CONTROLS HINT BAR -->
+      <div id="controls-bar" class="controls-bar hidden">
+        <span><kbd>A-Z</kbd> Gõ Romaji (Hepburn / Kunrei-shiki)</span>
+        <span><kbd>BACKSPACE</kbd> / <kbd>ESC</kbd> Đổi mục tiêu</span>
+        <span id="hint-armor-break"><kbd>TAB</kbd> Phá giáp Kanji (-50% điểm, hiện Hiragana)</span>
+        <span><kbd>SPACE</kbd> Tuyệt kỹ Iaijutsu (khi đầy 100% Kiếm Ý)</span>
+      </div>
+
+      <!-- MAIN MENU OVERLAY -->
+      <div id="menu-overlay" class="overlay">
+        <div class="menu-panel">
+          <div class="title-badge">🌸 KIẾM ĐẠO NHẬT BẢN • HOA ANH ĐÀO TRẢM KÍCH 🌸</div>
+          <h1 class="game-title">
+            <span class="jp-title">侍タイピング • 花吹雪</span>
+            <span class="en-title">KANA SLASH</span>
+          </h1>
+          <p class="game-subtitle">
+            Vung thanh Katana phóng luồng Kiếm Khí Bán Nguyệt dưới bầu trời hoa anh đào bay phảng phất. Hỗ trợ gõ Romaji linh hoạt (`shi`/`si`, `chi`/`ti`, `tsu`/`tu`, `fu`/`hu`).
+          </p>
+
+          <div class="mode-grid">
+            <button class="mode-card" data-mode="1">
+              <div class="mode-level">LEVEL 1 • ĐẠO TRƯỜNG</div>
+              <div class="mode-name">Hiragana Only</div>
+              <div class="mode-sample">さくら • かたな • しのび</div>
+              <p class="mode-desc">Chỉ xuất hiện từ vựng Hiragana. Quái di chuyển chậm, quỹ đạo thẳng giúp làm quen phản xạ.</p>
+            </button>
+
+            <button class="mode-card" data-mode="2">
+              <div class="mode-level">LEVEL 2 • ÁM KHÍ</div>
+              <div class="mode-name">Katakana Only</div>
+              <div class="mode-sample">サムライ • スピード • ドラゴン</div>
+              <p class="mode-desc">Từ ngoại lai & tượng thanh Katakana. Quái Ninja bay lượn sóng (Sine-wave) hoặc lao nhanh.</p>
+            </button>
+
+            <button class="mode-card" data-mode="3">
+              <div class="mode-level">LEVEL 3 • SONG KIẾM</div>
+              <div class="mode-name">Hira + Kata Mix</div>
+              <div class="mode-sample">かみなり ⚡ ライトニング</div>
+              <p class="mode-desc">Kết hợp ngẫu nhiên cả Hiragana và Katakana. Rèn phản xạ chuyển đổi nhận diện chữ liên tục.</p>
+            </button>
+
+            <button class="mode-card mode-kanji" data-mode="4">
+              <div class="mode-level">LEVEL 4 • THIẾT GIÁP</div>
+              <div class="mode-name">Kanji Armor Mode</div>
+              <div class="mode-sample">刀 • 火炎 • 雷鳴 • 居合斬り</div>
+              <p class="mode-desc">Chỉ hiện Kanji + nghĩa. Bấm <kbd>TAB</kbd> để <strong>Phá Giáp</strong> hiện Furigana (-50% điểm & reset Combo).</p>
+            </button>
+
+            <button class="mode-card mode-chaos" data-mode="5">
+              <div class="mode-level">LEVEL 5 • BÁCH QUỶ DẠ HÀNH</div>
+              <div class="mode-name">All-In Endless Chaos</div>
+              <div class="mode-sample">百鬼夜行 • BOSS MỖI 5 WAVE</div>
+              <p class="mode-desc">Trộn lẫn Hiragana, Katakana, Kanji. Boss xuất hiện mỗi 5 Wave bắn mũi tên ký tự đơn buộc phải Parry!</p>
+            </button>
+          </div>
+
+          <div class="menu-footer">
+            <div class="audio-toggle">
+              <label>
+                <input type="checkbox" id="chk-sound" checked />
+                <span>Âm thanh Web Audio Synthesizer (KENG / Trảm kích)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME OVER OVERLAY -->
+      <div id="gameover-overlay" class="overlay hidden">
+        <div class="gameover-panel">
+          <div class="gameover-badge">THẤT THỦ / DEFEATED</div>
+          <h2 class="gameover-title">落命 • LẠC MỆNH</h2>
+          <div class="stats-summary">
+            <div class="summary-item">
+              <span>ĐIỂM SỐ</span>
+              <strong id="go-score">0</strong>
+            </div>
+            <div class="summary-item">
+              <span>WAVE ĐẠT ĐƯỢC</span>
+              <strong id="go-wave">1</strong>
+            </div>
+            <div class="summary-item">
+              <span>CHUỖI COMBO TỐI ĐA</span>
+              <strong id="go-streak">0</strong>
+            </div>
+            <div class="summary-item">
+              <span>TỐC ĐỘ CHÍNH XÁC</span>
+              <strong id="go-accuracy">100%</strong>
+            </div>
+          </div>
+          <div class="gameover-actions">
+            <button id="btn-retry" class="primary-btn">⚔️ TÁI ĐẤU (RETRY)</button>
+            <button id="btn-back-menu" class="secondary-btn">CHỌN CHẾ ĐỘ KHÁC</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
